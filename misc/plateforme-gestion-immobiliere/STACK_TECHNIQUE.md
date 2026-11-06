@@ -1,186 +1,256 @@
-# Plateforme intégrée de gestion immobilière — Stack technique
+# Plateforme intégrée de gestion immobilière — Stack technique 100 % libre
 
 > Complète `SPECIFICATIONS_FONCTIONNELLES.md` et les maquettes d'écran.
-> Version 1.0 — novembre 2026
+> Version 2.0 — novembre 2026
+>
+> **Exigence** : uniquement des logiciels libres et open source, auto-hébergeables, sans licence
+> payante, sans abonnement et sans dépendance à un éditeur ou à un cloud particulier.
 
 ---
 
-## 1. Principes qui guident les choix
+## 1. Règles de sélection
 
-| Contrainte métier | Conséquence technique |
-|---|---|
-| L'argent des propriétaires transite par la plateforme | Base relationnelle transactionnelle (ACID), grand livre en partie double, écritures non modifiables, montants en entiers |
-| Transparence et traçabilité | Journal d'audit en ajout seul, horodatage, pièce justificative attachée à chaque mouvement |
-| Utilisateurs sur téléphone, réseau 3G parfois instable | Applications mobiles hors-ligne, pages légères, images compressées, SMS/USSD en secours |
-| Paiement mobile money (Orange Money, MTN MoMo) | Couche paiement découplée, multi-fournisseurs, rapprochement automatique |
-| Équipe de démarrage réduite | **Monolithe modulaire** plutôt que microservices ; un seul langage de bout en bout |
-| Croissance multi-agences, multi-pays | Multi-locataire dès le départ, règles métier paramétrables par pays |
-| Charte Quitus déjà conçue pour Angular | Réutiliser la charte et ses composants côté web et mobile |
+Chaque composant retenu doit :
+1. être sous **licence libre reconnue** (MIT, Apache 2.0, BSD, MPL, GPL, AGPL, LGPL) ;
+2. être **auto-hébergeable** sur vos propres serveurs ou chez n'importe quel hébergeur ;
+3. être **remplaçable** : formats et protocoles ouverts (SQL, S3, OIDC, OpenAPI, SMTP, OpenTelemetry) ;
+4. être **maintenu activement** par une communauté ou une fondation, pas par un seul éditeur susceptible de changer la licence.
+
+Pour cette dernière raison, plusieurs outils connus sont **écartés** au profit de leur alternative communautaire :
+
+| Outil écarté | Raison | Remplacé par |
+|---|---|---|
+| Redis | Licence modifiée en 2024 (licences non libres, puis AGPL ajoutée en 2025) : risque de nouveau changement | **Valkey** (BSD, Linux Foundation) |
+| Terraform | Passé sous licence BSL (non libre) en 2023 | **OpenTofu** (MPL, Linux Foundation) |
+| HashiCorp Vault | Passé sous licence BSL en 2023 | **OpenBao** (MPL, Linux Foundation) |
+| Sentry | Licence FSL, non libre | **GlitchTip** (MIT, compatible avec les SDK Sentry) |
+| MinIO | Édition communautaire réduite en 2025 (console retirée, distribution en sources seulement) | **SeaweedFS** (Apache 2.0) ou **Garage** (AGPL) |
+| GitHub / GitHub Actions | Service propriétaire | **Forgejo** + Forgejo Actions ou **Woodpecker CI** |
+| Cloudflare | Service propriétaire | Nginx/Traefik + cache + **imgproxy** |
+| API d'IA commerciales | Paiement à l'usage | **Modèles ouverts** auto-hébergés (vLLM / Ollama) |
+| Firebase, Stripe, WhatsApp Business, SES | Services propriétaires | Voir sections 3.3, 3.7 et 3.8 |
 
 ---
 
 ## 2. Vue d'ensemble
 
 ```
-            ┌──────────────── Clients ────────────────┐
-            │ Web (Angular)  ·  Apps mobiles (Ionic/  │
-            │ Capacitor)  ·  Site vitrine (Angular SSR)│
-            │ API partenaires  ·  Webhooks  ·  USSD/SMS│
-            └───────────────────┬─────────────────────┘
-                                │ HTTPS
-                ┌───────────────▼────────────────┐
-                │ Passerelle : WAF + équilibreur │
-                │ + limitation de débit          │
-                └───────────────┬────────────────┘
+            ┌──────────────── Clients ─────────────────┐
+            │ Web (Angular) · Apps mobiles (Ionic/      │
+            │ Capacitor) · Site vitrine (Angular SSR)   │
+            │ API partenaires · Webhooks · SMS          │
+            └───────────────────┬──────────────────────┘
+                                │ HTTPS (Let's Encrypt)
+              ┌─────────────────▼──────────────────┐
+              │ Traefik + Coraza WAF (règles OWASP)│
+              │ + imgproxy (images)                 │
+              └─────────────────┬──────────────────┘
                                 │
-   ┌────────────────────────────▼────────────────────────────┐
-   │ Backend NestJS (TypeScript) — monolithe modulaire        │
-   │  Patrimoine · Mandats · Location · Saisonnier · Vente ·  │
-   │  Terrains · Comptabilité · Paiements · Travaux · CRM ·   │
-   │  Documents · Contentieux · Reporting · Notifications     │
-   │  API REST (OpenAPI)  ·  Workers (files de tâches)        │
-   └──┬───────────┬───────────┬───────────┬───────────┬──────┘
-      │           │           │           │           │
- PostgreSQL    Redis      Stockage     Moteur de    Keycloak
- + PostGIS   (cache,      objet S3     recherche    (identité,
- (données,   files de     (documents,  (annonces)   MFA, SSO)
-  grand      tâches)      photos)
-  livre)
+   ┌────────────────────────────▼─────────────────────────────┐
+   │ Backend NestJS (TypeScript) — monolithe modulaire         │
+   │ API REST (OpenAPI) · Workers BullMQ · WebSocket           │
+   └──┬──────────┬───────────┬──────────┬──────────┬──────────┘
+      │          │           │          │          │
+ PostgreSQL   Valkey     SeaweedFS  Meilisearch  Keycloak
+ + PostGIS   (cache,    (stockage   (recherche)  (identité,
+ (données,    files)     S3)                      MFA, SSO)
+ grand livre)
       │
-  Réplique en lecture → BI (Metabase) et exports
+  Réplique → Apache Superset (BI)       Services annexes : Gotenberg (PDF),
+                                        ClamAV, Tesseract, vLLM (IA),
+                                        Jasmin (SMS), Postal (e-mail),
+                                        Documenso (signature), ntfy (push)
 ```
 
 ---
 
-## 3. Choix recommandés, couche par couche
+## 3. Composants, couche par couche
 
-### 3.1 Front web (back-office, espaces propriétaire et partenaire)
-| Élément | Choix | Pourquoi |
+### 3.1 Front web (back-office, espaces propriétaire, partenaire, prestataire)
+| Élément | Choix | Licence |
 |---|---|---|
-| Framework | **Angular** (dernière version stable, composants autonomes, signaux) | La charte Quitus et ses composants (`lucide-angular`) sont déjà prévus pour Angular |
-| Interface | Charte **Quitus** (jetons de couleur, Sora/Inter) + Angular CDK pour tableaux, fenêtres, glisser-déposer | Cohérence avec les maquettes |
-| État | Signaux Angular + NgRx Signal Store pour les écrans complexes | Simple et performant |
-| Tableaux de données | AG Grid (version communautaire) pour le back-office | Tri, filtres, export, gros volumes |
-| Graphiques | Apache ECharts | Tableaux de bord, rendement, occupation |
-| Cartes | **MapLibre GL** + tuiles OpenStreetMap | Carte du patrimoine, plan des lotissements, pas de coût de licence |
-| Formulaires | Reactive Forms + validation partagée avec le backend (schémas Zod générés depuis OpenAPI) | Une seule source de règles |
-| Internationalisation | Angular i18n (FR par défaut, EN) | Marché bilingue |
+| Framework | **Angular** (composants autonomes, signaux) — compatible avec la charte Quitus | MIT |
+| Composants de base | Angular CDK + composants de la charte Quitus | MIT |
+| État | Signaux Angular + NgRx Signal Store | MIT |
+| Tableaux | **TanStack Table** (ou AG Grid Community, MIT) | MIT |
+| Graphiques | **Apache ECharts** | Apache 2.0 |
+| Cartes | **MapLibre GL JS** | BSD-3 |
+| Fonds de carte | Tuiles **OpenStreetMap** auto-hébergées au format **PMTiles** (Protomaps) — un seul fichier servi par Nginx, aucun serveur de tuiles tiers | BSD / ODbL (données) |
+| Géocodage d'adresses | **Nominatim** ou **Photon** auto-hébergé, données OSM du Cameroun | GPL / Apache 2.0 |
+| Icônes | **Lucide** | ISC |
+| Polices | Sora et Inter, hébergées sur vos serveurs | OFL |
+| Internationalisation | Angular i18n | MIT |
 
 ### 3.2 Site vitrine et annonces
-- **Angular SSR** (rendu côté serveur) pour le référencement des annonces et des pages agences.
-- Images servies par un CDN, redimensionnées à la volée (formats WebP/AVIF).
-
-### 3.3 Applications mobiles (propriétaire, locataire, gestionnaire terrain, prestataire)
-| Élément | Choix | Pourquoi |
+| Élément | Choix | Licence |
 |---|---|---|
-| Framework | **Ionic + Capacitor** (Angular) | Même code, mêmes composants et même équipe que le web ; une app iOS + Android |
-| Hors-ligne | SQLite (plugin Capacitor) + file de synchronisation | États des lieux et visites sans réseau |
-| Photos | Plugin caméra, compression avant envoi, envoi différé | Économie de données mobiles |
-| Notifications | Firebase Cloud Messaging (Android et iOS) | Standard, gratuit |
-| Signature sur écran | Canvas de signature + horodatage serveur | EDL et bons de visite |
-| PWA | Version web installable pour les locataires qui ne veulent pas d'application | Accès sans téléchargement |
+| Rendu serveur (référencement) | **Angular SSR** | MIT |
+| Images | **imgproxy** (redimensionnement WebP/AVIF à la volée) + cache Nginx | MIT / BSD |
+| Mesure d'audience | **Matomo** ou **Plausible CE** (respect de la vie privée) | GPL / AGPL |
 
-> Alternative si l'équipe est plutôt mobile : **Flutter**. Mais deux bases de code d'interface (Angular et Flutter) coûtent plus cher à maintenir.
+### 3.3 Applications mobiles
+| Élément | Choix | Licence |
+|---|---|---|
+| Framework | **Ionic + Capacitor** (Angular, même code que le web) | MIT |
+| Base locale hors-ligne | **SQLite** (plugin Capacitor community) | Domaine public / MIT |
+| Synchronisation | File d'opérations locale + API de synchronisation maison | — |
+| Caméra, géolocalisation, fichiers | Plugins Capacitor officiels | MIT |
+| Notifications | **ntfy** auto-hébergé + **UnifiedPush** sur Android ; repli par SMS | Apache 2.0 / GPL |
+| Version installable sans magasin | **PWA** (service worker Angular) | MIT |
+
+> **Limite à connaître** : sur iPhone, les notifications d'une application native passent obligatoirement par le service d'Apple (APNs, gratuit mais non libre). Sur Android, une application publiée sur Google Play utilise en pratique Firebase (gratuit). ntfy/UnifiedPush évitent Google pour les appareils qui l'acceptent. Les messages importants (loyer, urgence) partent aussi par SMS.
 
 ### 3.4 Backend
-| Élément | Choix | Pourquoi |
+| Élément | Choix | Licence |
 |---|---|---|
-| Langage | **TypeScript** sur Node.js LTS | Même langage que le front, recrutement facile |
-| Framework | **NestJS** | Modules, injection de dépendances, structure claire pour un monolithe modulaire |
-| Architecture | Monolithe modulaire, un module par domaine métier (chaque module de la spécification), frontières strictes, communication par événements internes | Livrer vite, découper plus tard si besoin |
-| Accès aux données | **Prisma** (ou Drizzle) + SQL brut pour la comptabilité | Typage fort ; requêtes comptables maîtrisées |
-| API | REST + **OpenAPI** générée, versionnée (`/v1`) ; webhooks signés pour partenaires | Simple à intégrer pour les partenaires |
-| Tâches de fond | **BullMQ** sur Redis | Quittancement de masse, relances, révisions de loyer, reversements, génération de PDF |
-| Planification | Tâches planifiées BullMQ (cron) | Calendrier de gestion automatisé |
-| Événements | Pattern « outbox » en base, puis bus interne | Fiabilité : aucun événement perdu si un service tombe |
-| Moteur de règles | Règles paramétrables en base (indices, délais de préavis, honoraires, plafonds) par pays | Pas de réglementation codée en dur |
-| Workflows | Moteur de workflows maison simple au départ ; **Temporal** si les processus longs se multiplient (vente, contentieux) | Processus de plusieurs semaines fiables |
+| Langage / exécution | **TypeScript** sur **Node.js** LTS | Apache 2.0 / MIT |
+| Framework | **NestJS** (monolithe modulaire, un module par domaine métier) | MIT |
+| ORM | **Drizzle ORM** ou **MikroORM** + SQL brut pour la comptabilité | Apache 2.0 / MIT |
+| API | REST + **OpenAPI** (Swagger), webhooks signés | MIT |
+| Validation | **Zod** (schémas partagés front/back) | MIT |
+| Tâches de fond | **BullMQ** sur Valkey | MIT |
+| Processus longs (vente, contentieux) | **Temporal** (auto-hébergé) — à partir de la V2 | MIT |
+| Temps réel | **Socket.IO** | MIT |
 
-> Alternative si l'équipe est C# (charte PES Blazor) : **ASP.NET Core** + Entity Framework Core. Les autres choix restent valables.
+> Alternative si l'équipe est C# : **.NET** (ASP.NET Core + EF Core), également sous licence MIT et entièrement libre.
 
 ### 3.5 Données
-| Élément | Choix | Usage |
+| Élément | Choix | Licence |
 |---|---|---|
-| Base principale | **PostgreSQL** (géré) | Toutes les données métier |
-| Géographie | **PostGIS** | Parcelles, bornes GPS, lotissements, recherche par zone |
-| Multi-locataire | Colonne `tenant_id` + **Row-Level Security** PostgreSQL | Cloisonnement des agences et partenaires garanti par la base |
-| Grand livre | Tables d'écritures en ajout seul (pas de mise à jour ni suppression, corrections par contre-passation), contrôle d'équilibre par transaction | Comptabilité du propriétaire fiable et auditable |
-| Montants | Entiers en plus petite unité + code devise (XAF, EUR, CAD…) | Jamais de nombres à virgule flottante pour l'argent |
-| Audit | Table d'audit en ajout seul + chaînage par empreinte (hash) | Preuve d'intégrité |
-| Cache et sessions | **Redis** | Performance |
-| Recherche | **Meilisearch** (ou OpenSearch à grande échelle) | Recherche d'annonces, de lots, de tiers |
-| Analytique | Réplique en lecture → **Metabase** ; entrepôt (ClickHouse ou BigQuery) en V3 | Tableaux de bord sans charger la base principale |
-| Sauvegardes | pgBackRest ou sauvegardes gérées, restauration à un instant donné, copie chiffrée hors site | Plan de reprise |
+| Base principale | **PostgreSQL** | PostgreSQL (libre) |
+| Géographie (parcelles, bornes, lotissements) | **PostGIS** | GPL |
+| Haute disponibilité | **Patroni** + **etcd** (bascule automatique) | MIT / Apache 2.0 |
+| Pool de connexions | **PgBouncer** | ISC |
+| Cache et files | **Valkey** | BSD-3 |
+| Recherche (annonces, lots, tiers) | **Meilisearch** (édition communautaire) ou **OpenSearch** | MIT / Apache 2.0 |
+| Analytique (V3) | **ClickHouse** | Apache 2.0 |
+| BI / tableaux de bord internes | **Apache Superset** (ou Metabase, AGPL) | Apache 2.0 |
+| Sauvegardes PostgreSQL | **pgBackRest** (restauration à un instant donné) | MIT |
+| Sauvegardes fichiers | **Restic** ou **BorgBackup**, copie chiffrée hors site | BSD / BSD |
+
+Principes inchangés pour la comptabilité :
+- Multi-locataire par `tenant_id` + **Row-Level Security** PostgreSQL.
+- Grand livre en **ajout seul** (corrections par contre-passation), équilibre vérifié à chaque transaction.
+- Montants en **entiers** (plus petite unité) + code devise. Jamais de nombres à virgule flottante.
+- Journal d'audit en ajout seul, chaîné par empreinte (SHA-256).
 
 ### 3.6 Documents
-| Élément | Choix |
-|---|---|
-| Stockage | Stockage objet compatible **S3** (fournisseur cloud ou MinIO), chiffré, versionné |
-| Antivirus | ClamAV sur chaque fichier déposé |
-| Génération PDF | Modèles HTML (Handlebars) → PDF via **Gotenberg** : baux, quittances, CRG, mises en demeure |
-| OCR et extraction | Moteur OCR + modèle d'IA (voir 3.10) pour lire factures, pièces d'identité, titres fonciers |
-| Signature électronique | Prestataire de signature électronique conforme au droit applicable (à valider par un juriste par pays) ; intégration par API et webhooks |
-| Archivage probant | Horodatage qualifié + empreinte stockée, conservation selon durées légales |
+| Élément | Choix | Licence |
+|---|---|---|
+| Stockage objet compatible S3 | **SeaweedFS** (ou **Garage**) | Apache 2.0 / AGPL |
+| Antivirus des fichiers déposés | **ClamAV** | GPL |
+| Génération PDF (baux, quittances, CRG) | Modèles **Handlebars** → **Gotenberg** | MIT / MIT |
+| OCR | **Tesseract** ou **PaddleOCR** | Apache 2.0 |
+| Signature électronique | **Documenso** ou **DocuSeal** (parcours multi-signataires) | AGPL |
+| Signature PDF avancée (certificats, PAdES) | Bibliothèque **DSS** de la Commission européenne | LGPL |
+| Horodatage | Serveur d'horodatage RFC 3161 (OpenSSL TSA / **Signserver CE**) | Apache 2.0 / LGPL |
+| GED (option) | Module maison ; **Paperless-ngx** pour le classement interne | GPL |
+
+> **Limite juridique** : un logiciel libre produit des signatures techniquement solides, mais une signature « qualifiée » au sens légal exige un certificat délivré par une autorité de certification reconnue dans le pays. À faire valider par un juriste pour le Cameroun et chaque pays visé.
 
 ### 3.7 Paiements
-| Besoin | Choix |
-|---|---|
-| Mobile money | API **Orange Money** et **MTN MoMo**, ou agrégateur régional (CinetPay, Campay, Notch Pay, Flutterwave…) pour un seul contrat |
-| Cartes | Via l'agrégateur ; Stripe pour les propriétaires et locataires de la diaspora (Europe, Amérique du Nord) |
-| Virements | Comptes séquestres chez une banque partenaire ; import des relevés (fichiers ou API bancaire) |
-| Espèces | Saisie au guichet avec reçu numéroté et double contrôle |
-| Architecture | Module `Paiements` avec un adaptateur par fournisseur, clés d'idempotence, webhooks vérifiés, rapprochement automatique quotidien |
-| Reversements | Virements groupés et paiements mobile money sortants, double validation obligatoire |
+| Besoin | Choix | Licence |
+|---|---|---|
+| Mobile money | Intégration **directe** des API Orange Money et MTN MoMo, sans agrégateur intermédiaire | — |
+| Orchestration (option, V2) | **Hyperswitch** (routage multi-fournisseurs, réessais, rapprochement) | Apache 2.0 |
+| Virements | Comptes séquestres bancaires ; import des relevés (formats CSV, MT940, CAMT.053) avec un analyseur maison | — |
+| Espèces | Saisie au guichet, reçu numéroté, double contrôle | — |
+| Architecture | Module `Paiements` : un adaptateur par opérateur, clés d'idempotence, webhooks vérifiés, rapprochement quotidien | — |
+
+> **Limite** : les opérateurs prélèvent des frais par transaction. Aucun logiciel ne peut les supprimer ; l'intégration directe évite seulement la commission d'un agrégateur.
 
 ### 3.8 Communication
-- E-mail transactionnel : Amazon SES, Brevo ou équivalent.
-- SMS : agrégateur local (meilleure délivrabilité et coût au Cameroun) + Twilio en secours.
-- **WhatsApp Business API** : rappels de loyer, confirmations de visite.
-- **USSD** (V2) : consulter son solde et payer sans smartphone.
-- Messagerie interne et notifications en temps réel : WebSocket (Socket.IO via NestJS).
+| Canal | Choix | Licence |
+|---|---|---|
+| E-mail | **Postal** (serveur d'envoi complet) ou Postfix + OpenDKIM | MIT / IPL |
+| SMS | **Jasmin SMS Gateway** connecté aux opérateurs en SMPP ; ou passerelle sur téléphones Android (application open source « SMS Gateway for Android ») pour démarrer | Apache 2.0 |
+| Support client multicanal | **Chatwoot** (e-mail, chat du site, SMS, Telegram) | MIT |
+| Messagerie instantanée | **Telegram Bot API** (gratuite) ; WhatsApp seulement en option, car payant par conversation | — |
+| Notifications push | **ntfy** (voir 3.3) | Apache 2.0 |
+
+> **Limite** : l'envoi de SMS et l'accès USSD passent par les opérateurs, qui facturent le volume. Le logiciel est libre, pas le réseau.
 
 ### 3.9 Identité et sécurité
-| Élément | Choix |
-|---|---|
-| Identité | **Keycloak** (OIDC) : comptes, rôles, MFA, SSO pour partenaires, connexion par SMS (code à usage unique) |
-| Autorisations | Rôles + attributs (agence, portefeuille, lot) ; vérifiées dans le backend **et** par Row-Level Security en base |
-| Secrets | HashiCorp Vault ou gestionnaire de secrets du cloud |
-| Protection | WAF, limitation de débit, en-têtes de sécurité, analyse des dépendances (Dependabot, Trivy) |
-| Anti-fraude | Double validation des virements, gel après changement de RIB, alertes d'anomalies |
-| Données personnelles | Chiffrement des pièces sensibles, purge automatique des dossiers de candidats, registre des traitements |
+| Élément | Choix | Licence |
+|---|---|---|
+| Identité, MFA, SSO, connexion par code SMS | **Keycloak** | Apache 2.0 |
+| Secrets | **OpenBao** | MPL 2.0 |
+| Proxy inverse et TLS | **Traefik** (ou Nginx / Caddy) + certificats **Let's Encrypt** gratuits | MIT / BSD / Apache 2.0 |
+| WAF | **Coraza** + règles **OWASP CRS** | Apache 2.0 |
+| Protection contre la force brute | **CrowdSec** ou Fail2ban | MIT / GPL |
+| Analyse des vulnérabilités | **Trivy** (images, dépendances), **Semgrep CE** (code), **Renovate** (mises à jour) | Apache 2.0 / LGPL / AGPL |
+| Tests d'intrusion | **OWASP ZAP** | Apache 2.0 |
 
-### 3.10 Intelligence artificielle
-| Usage | Approche |
-|---|---|
-| Lecture de documents (factures, CNI, avis d'imposition, titres) | API Claude (vision) avec sortie structurée, validation humaine des champs critiques |
-| Rédaction d'annonces, courriers, comptes rendus | API Claude (modèle rapide et économique) |
-| Assistant locataire et propriétaire 24 h/24 | API Claude avec accès en lecture aux données de l'utilisateur via des outils contrôlés, escalade vers un humain |
-| Qualification des tickets à partir de photos | API Claude (vision) |
-| Estimation de loyers et de prix, score de risque d'impayé | Modèles statistiques classiques (Python, scikit-learn) entraînés sur vos données, servis par un petit service séparé en V3 |
-| Garde-fous | Aucune décision automatique sur la sélection d'un locataire ou une retenue ; journal de chaque suggestion |
+### 3.10 Intelligence artificielle (auto-hébergée)
+| Usage | Choix | Licence |
+|---|---|---|
+| Serveur de modèles | **vLLM** (production, GPU) ou **Ollama** (petits volumes) | Apache 2.0 / MIT |
+| Modèles de langage | Modèles à poids ouverts sous **Apache 2.0** (familles Mistral, Qwen…) ; vérifier la licence de chaque modèle avant usage commercial | Apache 2.0 |
+| Lecture de documents | OCR (Tesseract/PaddleOCR) + modèle vision-langage ouvert pour extraire les champs | Apache 2.0 |
+| Recherche dans les documents (assistant) | **pgvector** dans PostgreSQL | PostgreSQL |
+| Estimation de loyers, risque d'impayé | **scikit-learn** / **LightGBM** en Python | BSD / MIT |
+| Garde-fous | Validation humaine des décisions sensibles, journal de chaque suggestion | — |
+
+> **Limite** : un modèle ouvert est gratuit, mais il faut une machine avec carte graphique pour le faire tourner. Ce module est optionnel ; la plateforme fonctionne sans IA.
 
 ### 3.11 Infrastructure et exploitation
-| Élément | Choix |
-|---|---|
-| Conteneurs | Docker |
-| Hébergement | Démarrage sur conteneurs gérés (Cloud Run, AWS ECS, Azure Container Apps ou Scaleway) ; **Kubernetes** seulement quand la charge le justifie |
-| Région | Région cloud la plus proche (Afrique du Sud ou Europe) ou hébergeur local ; **vérifier les exigences de localisation des données** de la loi camerounaise sur les données personnelles |
-| Infrastructure as code | **Terraform** |
-| CI/CD | **GitHub Actions** : tests, analyse de sécurité, construction des images, déploiement par environnement (dev, recette, production) |
-| Observabilité | OpenTelemetry → Grafana (Prometheus, Loki, Tempo) ; **Sentry** pour les erreurs web et mobile |
-| Disponibilité | Base en haute disponibilité, au moins 2 instances backend, sauvegardes testées chaque mois |
-| CDN | Cloudflare (cache, protection DDoS, images) |
+| Élément | Choix | Licence |
+|---|---|---|
+| Système | **Debian** ou **Ubuntu Server** | Libre |
+| Virtualisation (serveurs physiques) | **Proxmox VE** | AGPL |
+| Conteneurs | **Podman** ou **Docker Engine** (Moby) — pas Docker Desktop, payant pour les grandes entreprises | Apache 2.0 |
+| Orchestration | **Docker Compose** au démarrage ; **k3s** (Kubernetes léger) ensuite | Apache 2.0 |
+| Infrastructure as code | **OpenTofu** + **Ansible** | MPL 2.0 / GPL |
+| Dépôt de code, revue, tickets | **Forgejo** (ou GitLab CE) | GPL / MIT |
+| Intégration et déploiement continus | **Forgejo Actions** ou **Woodpecker CI** | GPL / Apache 2.0 |
+| Registre d'images | **Harbor** (ou registre intégré à Forgejo) | Apache 2.0 |
+| Métriques | **Prometheus** + **Grafana** | Apache 2.0 / AGPL |
+| Journaux | **Loki** (ou OpenSearch) | AGPL |
+| Traces | **OpenTelemetry** + **Tempo** (ou Jaeger) | Apache 2.0 / AGPL |
+| Erreurs web et mobile | **GlitchTip** | MIT |
+| Surveillance de disponibilité | **Uptime Kuma** | MIT |
+| Hébergement | Vos serveurs, un datacenter local ou tout hébergeur de VPS : rien n'est lié à un fournisseur | — |
 
 ### 3.12 Qualité et tests
-- Tests unitaires : Jest (backend), Vitest ou Jest (front).
-- Tests d'intégration sur une vraie base PostgreSQL (Testcontainers).
-- **Tests de propriétés sur la comptabilité** : équilibre de chaque écriture, représentation des fonds, arrondis.
-- Tests de bout en bout : **Playwright** (web) et Appium ou Detox (mobile) sur les parcours clés : paiement, reversement, signature du bail.
-- Revue de code obligatoire, couverture minimale sur les modules financiers.
+| Type | Outil | Licence |
+|---|---|---|
+| Unitaires | **Vitest** / **Jest** | MIT |
+| Intégration (vraie base) | **Testcontainers** | MIT |
+| Propriétés (comptabilité) | **fast-check** | MIT |
+| Bout en bout web | **Playwright** | Apache 2.0 |
+| Bout en bout mobile | **Appium** | Apache 2.0 |
+| Charge | **k6** | AGPL |
+| Monorepo | **Nx** (sans Nx Cloud) | MIT |
 
 ---
 
-## 4. Organisation du code
+## 4. Ce qui ne peut pas être gratuit
+
+Le logiciel est entièrement libre ; ces postes restent incompressibles :
+
+| Poste | Ordre de grandeur |
+|---|---|
+| Serveurs (achat ou location), électricité, bande passante | selon volume |
+| Frais par transaction mobile money et bancaires | fixés par les opérateurs |
+| SMS et éventuel USSD | au volume, auprès des opérateurs |
+| Publication des applications | Apple : abonnement annuel ; Google : frais unique |
+| Nom de domaine | annuel |
+| Certificat de signature qualifié (si exigé par la loi) | auprès d'une autorité de certification |
+| Carte graphique pour l'IA (optionnel) | achat ou location |
+
+---
+
+## 5. Points de vigilance sur les licences
+
+- **MIT, Apache, BSD, MPL** : aucune contrainte particulière pour un usage commercial.
+- **AGPL** (Grafana, Loki, Tempo, Documenso, DocuSeal, Garage, Metabase, k6…) : libre d'utilisation. Si vous **modifiez** le code de ces logiciels et les proposez à des utilisateurs par le réseau, vous devez publier vos modifications. Les utiliser tels quels, à côté de votre propre code, ne vous oblige à rien sur votre code.
+- **GPL** (PostGIS, ClamAV) : utilisés comme services séparés, ils n'imposent rien à votre code.
+- Votre propre code reste votre propriété ; vous choisissez sa licence.
+- Tenir un **inventaire des licences** (SBOM généré par Trivy) à chaque version.
+
+---
+
+## 6. Organisation du code
 
 ```
 plateforme/
@@ -194,43 +264,43 @@ plateforme/
 │   ├── api-client/       # Client typé généré depuis OpenAPI
 │   ├── domain/           # Types et règles partagés (montants, statuts)
 │   └── i18n/
-├── infra/                # Terraform, Docker, scripts
+├── infra/                # OpenTofu, Ansible, Compose, manifests k3s
 └── docs/
 ```
-Monorepo géré avec **Nx** : constructions et tests incrémentaux, règles de dépendances entre modules.
-
-Modules du backend (`apps/api/src/modules/`) : `patrimoine`, `tiers`, `mandats`, `location`, `saisonnier`, `vente`, `terrains`, `comptabilite`, `paiements`, `travaux`, `crm`, `documents`, `contentieux`, `assurances`, `fiscalite`, `reporting`, `notifications`, `administration`.
+Modules du backend : `patrimoine`, `tiers`, `mandats`, `location`, `saisonnier`, `vente`, `terrains`, `comptabilite`, `paiements`, `travaux`, `crm`, `documents`, `contentieux`, `assurances`, `fiscalite`, `reporting`, `notifications`, `administration`.
 
 ---
 
-## 5. Montée en charge prévue
+## 7. Montée en charge
 
-| Étape | Volume indicatif | Évolutions |
+| Étape | Volume indicatif | Déploiement |
 |---|---|---|
-| MVP | < 5 000 lots | Un monolithe, une base, Redis, stockage objet |
-| V1–V2 | 5 000 – 50 000 lots | Réplique en lecture, workers séparés de l'API, Meilisearch, CDN |
-| V3 | > 50 000 lots, plusieurs pays | Extraction éventuelle des modules Paiements et Notifications en services, entrepôt de données, Kubernetes, bus d'événements (NATS ou Kafka) |
+| MVP | < 5 000 lots | 3 serveurs : application, base de données, sauvegardes ; Docker Compose |
+| V1–V2 | 5 000 – 50 000 lots | PostgreSQL en haute disponibilité (Patroni), workers séparés, Meilisearch, réplique pour la BI |
+| V3 | > 50 000 lots, plusieurs pays | Cluster k3s, ClickHouse, extraction éventuelle des modules Paiements et Notifications, serveur GPU pour l'IA |
 
 ---
 
-## 6. Équipe de démarrage recommandée
+## 8. Équipe de démarrage
 
 | Rôle | Nombre |
 |---|---|
 | Responsable technique / architecte | 1 |
 | Développeurs full-stack TypeScript (Angular + NestJS) | 3 à 4 |
 | Développeur mobile (Ionic) | 1 |
-| Ingénieur DevOps (temps partiel au début) | 0,5 |
+| Administrateur systèmes / DevOps (auto-hébergement) | 1 |
 | Testeur / QA | 1 |
-| Designer produit (charte Quitus) | 0,5 |
-| Expert métier gestion immobilière + comptable | consultants |
+| Designer produit | 0,5 |
+| Experts métier (gestion immobilière, comptabilité, juriste) | consultants |
+
+> L'auto-hébergement complet demande un administrateur systèmes à temps plein dès le départ (mises à jour de sécurité, sauvegardes, supervision).
 
 ---
 
-## 7. Décisions à confirmer
+## 9. Décisions à confirmer
 
-1. **Langage du backend** : TypeScript/NestJS (recommandé) ou C#/.NET selon les compétences de l'équipe.
-2. **Agrégateur de paiement** : un contrat unique ou des intégrations directes Orange Money et MTN MoMo.
-3. **Hébergement** : cloud international ou hébergeur local, selon les exigences de localisation des données.
-4. **Prestataire de signature électronique** : valeur juridique à valider pour chaque pays visé.
-5. **Banque partenaire** pour les comptes séquestres et l'accès aux relevés.
+1. **Langage du backend** : TypeScript/NestJS (recommandé) ou C#/.NET, tous deux libres.
+2. **Hébergement** : serveurs en propre, datacenter local ou VPS, selon les exigences de localisation des données de la loi camerounaise.
+3. **Accès opérateurs** : contrats directs Orange et MTN pour le mobile money et l'envoi de SMS (SMPP).
+4. **Signature électronique** : valeur juridique et autorité de certification à valider par pays.
+5. **Module IA** : dès la V1 sur un serveur GPU, ou reporté à la V3.
