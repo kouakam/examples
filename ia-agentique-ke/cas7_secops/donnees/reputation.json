@@ -1,0 +1,6 @@
+[
+  {"indicateur": "185.220.101.47", "type": "ip", "verdict": "malveillant", "score": 95, "contexte": "Nœud de sortie Tor, associé à des campagnes de force brute."},
+  {"indicateur": "update-office365.cm-cdn.net", "type": "domaine", "verdict": "malveillant", "score": 98, "contexte": "Serveur de commande et contrôle connu (famille de maliciels bancaires). Aucun lien avec Microsoft."},
+  {"indicateur": "boreal-paiement.cm-secure.info", "type": "domaine", "verdict": "hameçonnage", "score": 90, "contexte": "Domaine enregistré il y a 3 jours, imite la marque Boréal."},
+  {"indicateur": "10.0.5.20", "type": "ip", "verdict": "interne", "score": 0, "contexte": "Baie de stockage de sauvegarde (inventaire des actifs)."}
+]

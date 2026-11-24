@@ -1,0 +1,7 @@
+[
+  {"id": "POL-01", "titre": "Congés payés", "texte": "Politique interne Boréal (fictive) : les congés s'acquièrent dès l'arrivée, à raison de 2 jours ouvrables par mois de travail effectif. Pendant la période d'essai, les congés s'acquièrent mais ne peuvent être pris qu'avec l'accord du gestionnaire.", "mots_cles": ["congé", "congés", "vacances", "jours", "période d'essai"]},
+  {"id": "POL-02", "titre": "Télétravail", "texte": "Le télétravail est possible jusqu'à 2 jours par semaine pour les postes administratifs, après la période d'essai et avec l'accord du gestionnaire. Les postes techniques et de terrain ne sont pas éligibles.", "mots_cles": ["télétravail", "domicile", "maison", "distance"]},
+  {"id": "POL-03", "titre": "Horaires", "texte": "Horaires de référence : 8 h – 17 h du lundi au vendredi, avec une pause d'une heure. Les équipes de maintenance suivent un planning de rotation communiqué chaque mois.", "mots_cles": ["horaires", "heure", "planning", "rotation"]},
+  {"id": "POL-04", "titre": "Frais de déplacement", "texte": "Les frais de déplacement professionnels sont remboursés sur justificatifs, via le formulaire de note de frais, dans les 30 jours.", "mots_cles": ["frais", "déplacement", "transport", "remboursement", "note de frais"]},
+  {"id": "POL-05", "titre": "Rémunération", "texte": "Toute question sur la rémunération individuelle est traitée exclusivement par le service RH et le gestionnaire.", "mots_cles": ["salaire", "rémunération", "prime", "augmentation", "paie"]}
+]

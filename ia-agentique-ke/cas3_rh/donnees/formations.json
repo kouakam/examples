@@ -1,0 +1,8 @@
+[
+  {"formation": "Accueil général", "site": "Yaoundé", "date": "2026-12-07", "lieu": "Salle Sanaga"},
+  {"formation": "Accueil général", "site": "Douala", "date": "2026-12-14", "lieu": "Salle Wouri"},
+  {"formation": "Éthique et conformité", "site": "en ligne", "date": "2026-12-09", "lieu": "Visioconférence"},
+  {"formation": "Éthique et conformité", "site": "en ligne", "date": "2026-12-16", "lieu": "Visioconférence"},
+  {"formation": "ERP module comptabilité", "site": "Yaoundé", "date": "2026-12-10", "lieu": "Salle informatique"},
+  {"formation": "Sécurité au travail", "site": "Douala", "date": "2026-12-15", "lieu": "Atelier central"}
+]

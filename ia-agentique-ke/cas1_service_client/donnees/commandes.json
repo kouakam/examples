@@ -1,0 +1,6 @@
+[
+  {"numero": "CMD-1001", "client_id": "C-100", "statut": "expédiée", "transporteur": "TransCam Express", "suivi": "TCE-55821", "date_expedition": "2026-11-18", "livraison_prevue": "2026-11-20", "dernier_evenement": "Retenu au centre de tri de Yaoundé (adresse incomplète)", "lignes": [{"article": "Cadenas laiton 50 mm", "quantite": 20, "prix_unitaire": 3500}], "total": 70000},
+  {"numero": "CMD-1002", "client_id": "C-300", "statut": "livrée", "date_livraison": "2026-11-15", "lignes": [{"article": "Filtre à huile FH-220", "quantite": 4, "prix_unitaire": 8000}], "total": 32000},
+  {"numero": "CMD-1003", "client_id": "C-200", "statut": "livrée", "date_livraison": "2026-11-10", "lignes": [{"article": "Climatiseur split 12 000 BTU", "quantite": 5, "prix_unitaire": 250000}], "total": 1250000},
+  {"numero": "CMD-1004", "client_id": "C-100", "statut": "en préparation", "lignes": [{"article": "Gants de travail (paire)", "quantite": 50, "prix_unitaire": 1200}], "total": 60000}
+]

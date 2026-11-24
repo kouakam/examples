@@ -1,0 +1,6 @@
+[
+  {"numero": "BC-501", "fournisseur_id": "F-01", "date": "2026-10-20", "lignes": [{"article": "Tôle acier 2 mm", "quantite": 100, "prix_unitaire": 12000}]},
+  {"numero": "BC-502", "fournisseur_id": "F-02", "date": "2026-10-22", "lignes": [{"article": "Carton double cannelure 60x40", "quantite": 500, "prix_unitaire": 450}]},
+  {"numero": "BC-503", "fournisseur_id": "F-03", "date": "2026-10-02", "lignes": [{"article": "Huile moteur 15W40 bidon 20 L", "quantite": 20, "prix_unitaire": 18500}]},
+  {"numero": "BC-504", "fournisseur_id": "F-02", "date": "2026-10-28", "lignes": [{"article": "Ruban adhésif 48 mm", "quantite": 200, "prix_unitaire": 1500}]}
+]

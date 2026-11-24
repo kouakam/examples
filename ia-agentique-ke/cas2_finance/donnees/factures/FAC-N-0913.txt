@@ -1,0 +1,13 @@
+ACIER NORDIQUE SARL — Zone industrielle de Bassa, Douala
+FACTURE N° FAC-N-0913            Date : 05/11/2026
+Client : Distribution Boréal
+Bon de commande : BC-501
+Compte bancaire : CM21 10005 00001 12345678901 23
+
+Désignation              | Qté | PU HT (FCFA) | Total HT
+Tôle acier 2 mm          | 100 | 12 576       | 1 257 600
+
+Total HT : 1 257 600 FCFA
+TVA 19,25 % : 242 088 FCFA
+Total TTC : 1 499 688 FCFA
+Conditions : paiement à 30 jours. Prix conforme à l'avenant n°1.

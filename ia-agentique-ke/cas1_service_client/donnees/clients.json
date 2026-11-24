@@ -1,0 +1,5 @@
+[
+  {"id": "C-100", "nom": "Quincaillerie Mbarga", "ville": "Yaoundé", "segment": "standard", "sensible": false},
+  {"id": "C-200", "nom": "Hôtel Le Flamboyant", "ville": "Douala", "segment": "premium", "sensible": true, "note": "Litige commercial ouvert en octobre"},
+  {"id": "C-300", "nom": "Garage Atangana", "ville": "Yaoundé", "segment": "standard", "sensible": false}
+]

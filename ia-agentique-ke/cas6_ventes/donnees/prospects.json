@@ -1,0 +1,5 @@
+[
+  {"id": "P-01", "entreprise": "Brasseries du Littoral", "contact": "Mme Ndzana, responsable des achats", "source": "formulaire du site web", "message": "Nous cherchons un fournisseur d'équipements de protection et de pièces de maintenance pour nos sites.", "consentement_prospection": true},
+  {"id": "P-02", "entreprise": "Cabinet Tchoua & Associés", "contact": "M. Tchoua, associé gérant", "source": "salon Promote 2026", "message": "Carte de visite laissée sur le stand.", "consentement_prospection": true},
+  {"id": "P-03", "entreprise": "Société Minière de l'Est", "contact": "Direction des achats", "source": "liste achetée à un courtier de données", "message": "", "consentement_prospection": false}
+]

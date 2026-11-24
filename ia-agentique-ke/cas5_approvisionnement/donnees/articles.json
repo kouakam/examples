@@ -1,0 +1,6 @@
+[
+  {"sku": "SKU-118", "designation": "Cadenas laiton 50 mm", "stock": 40, "stock_securite": 30, "prix_vente": 3500},
+  {"sku": "SKU-205", "designation": "Filtre à huile FH-220", "stock": 220, "stock_securite": 60, "prix_vente": 8000},
+  {"sku": "SKU-310", "designation": "Gants de travail (paire)", "stock": 150, "stock_securite": 100, "prix_vente": 1200},
+  {"sku": "SKU-412", "designation": "Climatiseur split 12 000 BTU", "stock": 3, "stock_securite": 2, "prix_vente": 250000}
+]
