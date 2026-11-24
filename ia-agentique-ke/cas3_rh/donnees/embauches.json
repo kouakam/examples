@@ -1,0 +1,4 @@
+[
+  {"id": "E-01", "nom": "Aïcha Ngono", "poste": "Comptable", "site": "Yaoundé", "date_arrivee": "2026-12-07", "gestionnaire": "Martin Fotso", "courriel_gestionnaire": "m.fotso@boreal.example", "statut_sirh": "embauche confirmée"},
+  {"id": "E-02", "nom": "Paul Essomba", "poste": "Technicien de maintenance", "site": "Douala", "date_arrivee": "2026-12-14", "gestionnaire": "Grace Mballa", "courriel_gestionnaire": "g.mballa@boreal.example", "statut_sirh": "embauche confirmée"}
+]

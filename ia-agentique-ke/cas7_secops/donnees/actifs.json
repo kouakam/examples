@@ -1,0 +1,6 @@
+[
+  {"hote": "srv-erp-01", "role": "Serveur ERP de production", "criticite": "critique", "responsable": "Équipe infrastructure"},
+  {"hote": "pc-compta-07", "role": "Poste de travail, service comptabilité", "criticite": "élevée", "responsable": "Support TI"},
+  {"hote": "srv-sauvegarde-01", "role": "Serveur de sauvegarde", "criticite": "élevée", "responsable": "Équipe infrastructure"},
+  {"hote": "messagerie", "role": "Passerelle de messagerie", "criticite": "élevée", "responsable": "Équipe messagerie"}
+]

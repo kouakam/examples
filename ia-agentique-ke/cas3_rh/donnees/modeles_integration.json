@@ -1,0 +1,20 @@
+{
+  "Comptable": {
+    "acces": [
+      {"systeme": "Messagerie et agenda", "niveau": "utilisateur", "sensible": false},
+      {"systeme": "Dossier partagé Finance", "niveau": "lecture-écriture", "sensible": false},
+      {"systeme": "ERP module comptabilité", "niveau": "saisie et validation", "sensible": true}
+    ],
+    "materiel": ["Ordinateur portable", "Second écran", "Casque téléphonique"],
+    "formations": ["Accueil général", "Éthique et conformité", "ERP module comptabilité"]
+  },
+  "Technicien de maintenance": {
+    "acces": [
+      {"systeme": "Messagerie et agenda", "niveau": "utilisateur", "sensible": false},
+      {"systeme": "GMAO (maintenance)", "niveau": "technicien", "sensible": false},
+      {"systeme": "Badge zones techniques", "niveau": "accès 24/7", "sensible": true}
+    ],
+    "materiel": ["Équipements de protection individuelle", "Tablette durcie", "Caisse à outils"],
+    "formations": ["Accueil général", "Sécurité au travail", "Éthique et conformité"]
+  }
+}

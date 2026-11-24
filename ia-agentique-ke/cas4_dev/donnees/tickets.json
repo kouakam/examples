@@ -1,0 +1,4 @@
+[
+  {"id": "DEV-101", "titre": "Remise mal calculée", "type": "bogue", "description": "Une remise de 10 % sur une commande de 50 000 FCFA HT donne un total HT de 5 000 FCFA au lieu de 45 000 FCFA. Signalé par le service commercial (devis erronés)."},
+  {"id": "DEV-102", "titre": "Valider le pourcentage de remise", "type": "amélioration", "description": "appliquer_remise doit lever ValueError si le pourcentage est négatif ou supérieur à 100. Ajouter les tests correspondants."}
+]

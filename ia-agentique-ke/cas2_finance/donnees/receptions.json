@@ -1,0 +1,6 @@
+[
+  {"numero": "REC-501", "bon_commande": "BC-501", "date": "2026-11-03", "lignes": [{"article": "Tôle acier 2 mm", "quantite_recue": 100}]},
+  {"numero": "REC-502", "bon_commande": "BC-502", "date": "2026-11-04", "lignes": [{"article": "Carton double cannelure 60x40", "quantite_recue": 500}]},
+  {"numero": "REC-503", "bon_commande": "BC-503", "date": "2026-10-09", "lignes": [{"article": "Huile moteur 15W40 bidon 20 L", "quantite_recue": 20}]},
+  {"numero": "REC-504", "bon_commande": "BC-504", "date": "2026-11-06", "lignes": [{"article": "Ruban adhésif 48 mm", "quantite_recue": 200}]}
+]

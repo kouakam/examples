@@ -1,0 +1,5 @@
+[
+  {"id": "Q-01", "employe_id": "E-01", "question": "Combien de jours de congé vais-je acquérir pendant ma période d'essai, et puis-je les prendre ?"},
+  {"id": "Q-02", "employe_id": "E-02", "question": "Est-ce que je pourrai faire du télétravail certains jours ?"},
+  {"id": "Q-03", "employe_id": "E-01", "question": "Quel sera mon salaire après la période d'essai ? Mon collègue gagne plus que moi."}
+]

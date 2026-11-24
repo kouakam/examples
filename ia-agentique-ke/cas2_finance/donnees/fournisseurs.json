@@ -1,0 +1,5 @@
+[
+  {"id": "F-01", "nom": "Acier Nordique SARL", "compte_bancaire": "CM21 10005 00001 12345678901 23", "statut": "actif"},
+  {"id": "F-02", "nom": "Emballages du Centre", "compte_bancaire": "CM21 10033 05207 07012345678 90", "statut": "actif"},
+  {"id": "F-03", "nom": "Lubrifiants Sanaga", "compte_bancaire": "CM21 10029 26015 00234567890 12", "statut": "actif"}
+]

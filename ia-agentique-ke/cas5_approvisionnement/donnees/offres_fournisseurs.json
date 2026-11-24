@@ -1,0 +1,8 @@
+[
+  {"sku": "SKU-118", "fournisseur": "Quincaillerie Pro Douala", "prix_unitaire": 3100, "delai_jours": 7, "fiabilite": 0.95, "reference": true, "minimum": 50},
+  {"sku": "SKU-118", "fournisseur": "Import Asia Trading", "prix_unitaire": 2600, "delai_jours": 35, "fiabilite": 0.80, "reference": false, "minimum": 500},
+  {"sku": "SKU-205", "fournisseur": "AutoPièces Central", "prix_unitaire": 6500, "delai_jours": 10, "fiabilite": 0.90, "reference": true, "minimum": 50},
+  {"sku": "SKU-310", "fournisseur": "Textiles Sécurité Cameroun", "prix_unitaire": 950, "delai_jours": 5, "fiabilite": 0.92, "reference": true, "minimum": 100},
+  {"sku": "SKU-310", "fournisseur": "Protec Afrique", "prix_unitaire": 900, "delai_jours": 12, "fiabilite": 0.70, "reference": true, "minimum": 200},
+  {"sku": "SKU-412", "fournisseur": "Froid Équipement SA", "prix_unitaire": 210000, "delai_jours": 21, "fiabilite": 0.88, "reference": true, "minimum": 1}
+]
